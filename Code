@@ -1,0 +1,41 @@
+# Convert the 'Presion' column in 'Chapman.Cuali' DataFrame to a factor with specified levels
+Chapman.Cuali$Presion <- factor(Chapman.Cuali$Presion, levels = c("Optima", "Normal", "Alta", "Descompensada"))
+
+# Convert the 'IMC' column in 'Chapman.Cuali' DataFrame to a factor with specified levels
+Chapman.Cuali$IMC <- factor(Chapman.Cuali$IMC, levels = c("Normal", "Sobrepeso", "Obesidad"))
+
+# Fit a multinomial logistic regression model with 'Presion' as the response and 'Edad', 'Colesterol', and 'IMC' as predictors
+Ajuste.Multinom.Cuanli <- multinom(Presion ~ Edad + Colesterol + IMC, data = Chapman.Cuali)
+
+# Display a summary of the fitted multinomial logistic regression model
+summary(Ajuste.Multinom.Cuanli)
+
+# Exponentiate the model's coefficients to get odds ratios
+exp(summary(Ajuste.Multinom.Cuanli)$coefficients)
+
+# Perform an ANOVA to compare two multinomial logistic regression models with different sets of predictors
+anova(multinom(Presion ~ Edad + Colesterol + IMC, data = Chapman.Cuali), multinom(Presion ~ Edad + Colesterol, data = Chapman.Cuali))
+
+# Calculate and exponentiate the confidence intervals for the model parameters
+exp(confint(Ajuste.Multinom.Cuanli))
+
+# Predict probabilities for the first 10 observations in the dataset
+predict(Ajuste.Multinom.Cuanli, type = "probs")[1:10,]
+
+# Predict the class for the first 10 observations
+predict(Ajuste.Multinom.Cuanli, type = "class")[1:10]
+
+# Create a contingency table comparing actual 'Presion' levels with predicted classes
+table(Chapman.Cuali$Presion, predict(Ajuste.Multinom.Cuanli, type = "class"))
+
+# Calculate the p-value for the deviance of the model to test its overall significance
+pchisq(Ajuste.Multinom.Cuanli$deviance, 585, lower.tail = F)
+
+# Fit a null multinomial logistic regression model (only intercept) for 'Presion'
+Ajuste.Multinom.0 <- multinom(Presion ~ 1, data = Chapman.Cuali)
+
+# Perform stepwise model selection starting from the null model to find the optimal set of predictors
+Ajuste.Multinom.Step <- step(Ajuste.Multinom.0, scope = list(lower = Presion ~ 1, upper = Presion ~ Edad + Colesterol + IMC), direction = "both")
+
+# Display a summary of the stepwise-selected multinomial logistic regression model
+summary(Ajuste.Multinom.Step)
